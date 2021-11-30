@@ -1,0 +1,49 @@
+---
+- name: My ELK
+  hosts: ELK
+  remote_user: azadmin
+  become: true
+  tasks:
+
+  - name: UpdateMemorySize
+    command: sysctl -w vm.max_map_count=262144
+
+  - name: Install docker
+    apt:
+      update_cache: yes
+      force_apt_get: yes
+      name: docker.io
+      state: present
+
+  - name: Install python
+    apt:
+      name: python3-pip
+      state: present
+
+  - name: Installer Docker
+    pip:
+      name: docker
+      state: present
+
+  - name: User more memory
+    sysctl:
+      name: vm.max_map_count
+      value: 262144
+      state: present
+      reload: yes
+
+  - name: download and launch a docker elk container
+    docker_container:
+      name: elk
+      image: sebp/elk:761
+      state: started
+      restart_policy: always
+      published_ports:
+          - 5601:5601
+          - 9200:9200
+          - 5044:5044
+
+  - name: Enable service docker on boot
+    systemd:
+      name: docker
+      enabled: yes
